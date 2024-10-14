@@ -16,7 +16,7 @@ class Argument:
             self.sub_parsers = [
                 Parser.parse_config(parser) for parser in options['subs']
             ]
-            self.options = {k: v for k, v in options.items() if v != 'subs'}
+            self.options = {k: v for k, v in options.items() if k != 'subs'}
         else:
             self.options = options
 
@@ -51,7 +51,7 @@ class Parser:
         Class method used to create the instance of "Parser"
         class from the config passed through arguments
         """
-        res = cls({k: v for k, v in config.items() if v != 'args'})
+        res = cls({k: v for k, v in config.items() if k != 'args'})
         for options in config['args']:
             res.args.append(Argument(options))
         return res

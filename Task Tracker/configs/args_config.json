@@ -5,6 +5,7 @@
         {
             "dest": "action",
             "help": "The action to perform on the list of tasks.",
+            "required": "True",
             "subs": [
                 {
                     "prog": "add",
