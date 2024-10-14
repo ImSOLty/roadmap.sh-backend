@@ -13,14 +13,17 @@ class Argument:
     def __init__(self, options) -> "Argument":
         self.sub_parsers = {}
         if 'subs' in options:
-            self.sub_parsers = [Parser.parse_config(parser) for parser in options['subs']]
-            self.options = {option: value for option, value in options.items() if option != 'subs'}
+            self.sub_parsers = [
+                Parser.parse_config(parser) for parser in options['subs']
+            ]
+            self.options = {k: v for k, v in options.items() if v != 'subs'}
         else:
             self.options = options
 
     def construct_argument(self, parser: ArgumentParser) -> None:
         """
-        Add an argument to passed parser if there is no subparsers, depending on this argument.
+        Add an argument to passed parser if there is no subparsers,
+        depending on this argument.
         Otherwise, constructs all related subparsers
         """
         if self.sub_parsers:
@@ -45,14 +48,17 @@ class Parser:
     @classmethod
     def parse_config(cls, config: dict[str, typing.Any]) -> "Parser":
         """
-        Class method used to create the instance of "Parser" class from the config passed through arguments
+        Class method used to create the instance of "Parser"
+        class from the config passed through arguments
         """
-        res = cls({option: value for option, value in config.items() if option != 'args'})
+        res = cls({k: v for k, v in config.items() if v != 'args'})
         for options in config['args']:
             res.args.append(Argument(options))
         return res
 
-    def construct_parser(self, prev_parser: typing.Optional["Parser"] = None) -> ArgumentParser:
+    def construct_parser(
+            self, prev_parser: typing.Optional["Parser"] = None
+    ) -> ArgumentParser:
         """
         Method, used to construct the result ArgumentParser
         """
@@ -62,7 +68,9 @@ class Parser:
                 arg.construct_argument(parser)
             return parser
         else:
-            subparser = prev_parser.add_parser(name=self.options['prog'], **self.options)
+            subparser = prev_parser.add_parser(
+                name=self.options['prog'], **self.options
+            )
             for arg in self.args:
                 arg.construct_argument(subparser)
 

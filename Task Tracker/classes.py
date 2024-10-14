@@ -31,7 +31,9 @@ class Task:
     description: str
     state: State
 
-    def __init__(self, description: str, state: State | str = State.TODO) -> "Task":
+    def __init__(
+            self, description: str, state: State | str = State.TODO
+    ) -> "Task":
         self.description = description
         self.state = state if isinstance(state, State) else State(state)
 

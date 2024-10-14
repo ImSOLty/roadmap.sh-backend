@@ -50,7 +50,9 @@ def list_tasks(tasks: dict[int: Task], type: State) -> None:
 
     for t in [State.IN_PROGRESS, State.TODO, State.DONE]:
         if type == State.EMPTY or type == t:
-            print_tasks(t, {key: value for key, value in tasks.items() if value.state == t})
+            print_tasks(t, {
+                key: value for key, value in tasks.items() if value.state == t
+            })
 
 
 def perform_action(tasks: dict[int: Task], arguments: Namespace) -> None:
@@ -72,7 +74,9 @@ def perform_action(tasks: dict[int: Task], arguments: Namespace) -> None:
         if arguments.id not in tasks:
             raise KeyError("There is no such identifier in the list of tasks!")
     except ValueError:
-        raise ValueError("Incorrect data passed to a command: id can't be converted to integer")
+        raise ValueError(
+            "Inappropriate argument value: id can't be converted to integer"
+        )
     except AttributeError:
         pass
 
@@ -97,4 +101,6 @@ def parse_tasks(tasks: dict[int: typing.Any]) -> None:
     try:
         return {int(id): Task.from_dict(value) for id, value in tasks.items()}
     except ValueError:
-        raise ValueError("Tasks file was corrupted. Objects' keys should be convertable to integer")
+        raise ValueError(
+            "Tasks file may be corrupted. IDs should be convertable to int"
+        )
