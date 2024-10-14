@@ -4,7 +4,7 @@ import typing
 
 
 def add_task(tasks: dict[int: Task], task_name):
-    new_id = 0 if not tasks else (max(tasks.keys()) + 1)
+    new_id = 1 if not tasks else (max(tasks.keys()) + 1)
     tasks[new_id] = Task(task_name)
 
 
@@ -21,21 +21,35 @@ def mark_as(tasks, id, state):
 
 
 def list_tasks(tasks, type):
-    for id, task in tasks.items():
-        if type is State.EMPTY or task.state == type:
+    def print_tasks(type_to_print, tasks_to_print):
+        if type_to_print == State.IN_PROGRESS:
+            print("In progress:")
+        elif type_to_print == State.TODO:
+            print("To do:")
+        elif type_to_print == State.DONE:
+            print("Completed:")
+
+        for id, task in tasks_to_print.items():
             print(f'{id}. {task}')
+        print()
+
+    for t in [State.IN_PROGRESS, State.TODO, State.DONE]:
+        if type == State.EMPTY or type == t:
+            print_tasks(t, {key: value for key, value in tasks.items() if value.state == t})
 
 
 def perform_action(tasks, arguments: Namespace):
     action = Actions(arguments.action)
 
-    if arguments.id is not None:
-        try:
-            arguments.id = int(arguments.id)
-        except ValueError:
-            raise ValueError("Incorrect data passed to a command: id can't be converted to integer")
+    # id validation
+    try:
+        arguments.id = int(arguments.id)
         if arguments.id not in tasks:
             raise KeyError("There is no such identifier in the list of tasks!")
+    except ValueError:
+        raise ValueError("Incorrect data passed to a command: id can't be converted to integer")
+    except AttributeError:
+        pass
 
     if action == Actions.ADD:
         add_task(tasks, arguments.task_name)
