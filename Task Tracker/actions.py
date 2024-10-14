@@ -3,25 +3,40 @@ from argparse import Namespace
 import typing
 
 
-def add_task(tasks: dict[int: Task], task_name):
+def add_task(tasks: dict[int: Task], task_name: str) -> None:
+    """
+    'Add task' action function
+    """
     new_id = 1 if not tasks else (max(tasks.keys()) + 1)
     tasks[new_id] = Task(task_name)
 
 
-def update_task(tasks: dict[int: Task], id: int, new_task_name):
+def update_task(tasks: dict[int: Task], id: int, new_task_name: str) -> None:
+    """
+    'Update task' action function
+    """
     tasks[id].update_description(new_task_name)
 
 
-def delete_task(tasks: dict[int: Task], id: int):
+def delete_task(tasks: dict[int: Task], id: int) -> None:
+    """
+    'Delete task' action function
+    """
     tasks.pop(id)
 
 
-def mark_as(tasks, id, state):
+def mark_as(tasks: dict[int: Task], id: int, state: State) -> None:
+    """
+    'Mark as "done/in progress"' action function
+    """
     tasks[id].update_state(state)
 
 
-def list_tasks(tasks, type):
-    def print_tasks(type_to_print, tasks_to_print):
+def list_tasks(tasks: dict[int: Task], type: State) -> None:
+    """
+    Prints tasks according to their state
+    """
+    def print_tasks(type_to_print: State, tasks_to_print: dict[int: Task]):
         if type_to_print == State.IN_PROGRESS:
             print("In progress:")
         elif type_to_print == State.TODO:
@@ -38,7 +53,17 @@ def list_tasks(tasks, type):
             print_tasks(t, {key: value for key, value in tasks.items() if value.state == t})
 
 
-def perform_action(tasks, arguments: Namespace):
+def perform_action(tasks: dict[int: Task], arguments: Namespace) -> None:
+    """
+    Performs any action provided from user:
+    - Add
+    - Update
+    - Delete
+    - Mark as "in progress"
+    - Mark as "done"
+    - List
+    Validates id argument as well
+    """
     action = Actions(arguments.action)
 
     # id validation
@@ -65,7 +90,10 @@ def perform_action(tasks, arguments: Namespace):
         list_tasks(tasks, State(arguments.list_type))
 
 
-def parse_tasks(tasks: dict[int: typing.Any]):
+def parse_tasks(tasks: dict[int: typing.Any]) -> None:
+    """
+    Parses tasks from json representation to dict[int: Task]
+    """
     try:
         return {int(id): Task.from_dict(value) for id, value in tasks.items()}
     except ValueError:
