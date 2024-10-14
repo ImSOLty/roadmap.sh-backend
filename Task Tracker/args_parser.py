@@ -1,48 +1,16 @@
 from argparse import ArgumentParser
 import typing
-
-ARGS_CONFIG = {
-    'name': 'Task Management Tool',
-    'description': 'This program allows manipulation of tasks to track progress.',
-    'args': [{
-            'dest': 'action',
-            'help': 'The action to perform on the list of tasks.',
-            'subs': {
-                'add': [
-                    {'dest': 'task_name', 'help': 'The name of the new task.'}
-                ],
-                'update': [
-                    {'dest': 'id', 'help': 'The identifier of the task to update.'},
-                    {'dest': 'new_task_name', 'help': 'The new name for the existing task.'}
-                ],
-                'delete': [
-                    {'dest': 'id', 'help': 'The identifier of the task to delete.'}
-                ],
-                'mark-in-progress': [
-                    {'dest': 'id', 'help': 'The identifier of the task to mark as "in progress".'}
-                ],
-                'mark-done': [
-                    {'dest': 'id', 'help': 'The identifier of the task to mark as "done".'}
-                ],
-                'list': [
-                    {'dest': 'list_type', 'nargs': '?',
-                        'help': 'The filter type for listing tasks (leave blank to list all tasks).',
-                        'choices': ['done', 'todo', 'in-progress']}
-                ]
-            }
-    }]
-}
+import json
 
 
 class Argument:
-    sub_parsers: dict[str, list["Argument"]]
+    sub_parsers: list["Parser"]
     options: dict[str, typing.Any]
 
     def __init__(self, options):
         self.sub_parsers = {}
         if 'subs' in options:
-            for parser_name, arguments in options['subs'].items():
-                self.sub_parsers[parser_name] = [Argument(arg_opt) for arg_opt in arguments]
+            self.sub_parsers = [Parser.parse_config(parser) for parser in options['subs']]
             self.options = {option: value for option, value in options.items() if option != 'subs'}
         else:
             self.options = options
@@ -50,38 +18,41 @@ class Argument:
     def construct_argument(self, parser: ArgumentParser):
         if self.sub_parsers:
             subparsers = parser.add_subparsers(**self.options)
-            for sub_parser_name, arguments in self.sub_parsers.items():
-                subparser = subparsers.add_parser(sub_parser_name)
-                for arg in arguments:
-                    arg.construct_argument(subparser)
+            for sub_parser in self.sub_parsers:
+                sub_parser.construct_parser(subparsers)
         else:
             parser.add_argument(**self.options)
 
 
 class Parser:
-    prog_name: str
-    description: str
+    options: dict[str, typing.Any]
     args: list[Argument]
 
-    def __init__(self, name, description):
-        self.prog_name = name
-        self.description = description
+    def __init__(self, options):
+        self.options = options
         self.args = []
 
     @classmethod
     def parse_config(cls, config):
-        res = cls(config["name"], config["description"])
-        for options in config["args"]:
+        res = cls({option: value for option, value in config.items() if option != 'args'})
+        for options in config['args']:
             res.args.append(Argument(options))
         return res
 
-    def construct_parser(self):
-        parser = ArgumentParser(prog=self.prog_name, description=self.description)
-        for arg in self.args:
-            arg.construct_argument(parser)
-        return parser
+    def construct_parser(self, prev_parser=None):
+        if prev_parser is None:
+            parser = ArgumentParser(**self.options)
+            for arg in self.args:
+                arg.construct_argument(parser)
+            return parser
+        else:
+            subparser = prev_parser.add_parser(name=self.options['prog'], **self.options)
+            for arg in self.args:
+                arg.construct_argument(subparser)
 
 
-def parse_arguments():
-    parser = Parser.parse_config(ARGS_CONFIG).construct_parser()
+def parse_arguments(config_path):
+    with open(config_path, 'r') as config_file:
+        config = json.loads(config_file.read())
+        parser = Parser.parse_config(config).construct_parser()
     print(parser.parse_args())

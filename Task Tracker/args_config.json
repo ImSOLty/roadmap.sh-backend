@@ -1,0 +1,82 @@
+{
+    "prog": "Task Management Tool",
+    "description": "This program allows manipulation of tasks to track progress.",
+    "args": [
+        {
+            "dest": "action",
+            "help": "The action to perform on the list of tasks.",
+            "subs": [
+                {
+                    "prog": "add",
+                    "description": "Add a new task to the list.",
+                    "args": [
+                        {
+                            "dest": "task_name",
+                            "help": "The name of the new task."
+                        }
+                    ]
+                },
+                {
+                    "prog": "update",
+                    "description": "Update an existing task with a new name.",
+                    "args": [
+                        {
+                            "dest": "id",
+                            "help": "The identifier of the task to update."
+                        },
+                        {
+                            "dest": "new_task_name",
+                            "help": "The new name for the existing task."
+                        }
+                    ]
+                },
+                {
+                    "prog": "delete",
+                    "description": "Delete a task from the list.",
+                    "args": [
+                        {
+                            "dest": "id",
+                            "help": "The identifier of the task to delete."
+                        }
+                    ]
+                },
+                {
+                    "prog": "mark-in-progress",
+                    "description": "Mark a task as \"in progress\".",
+                    "args": [
+                        {
+                            "dest": "id",
+                            "help": "The identifier of the task to mark as \"in progress\"."
+                        }
+                    ]
+                },
+                {
+                    "prog": "mark-done",
+                    "description": "Mark a task as \"done\".",
+                    "args": [
+                        {
+                            "dest": "id",
+                            "help": "The identifier of the task to mark as \"done\"."
+                        }
+                    ]
+                },
+                {
+                    "prog": "list",
+                    "description": "List tasks, optionally filtered by status.",
+                    "args": [
+                        {
+                            "dest": "list_type",
+                            "nargs": "?",
+                            "help": "The filter type for listing tasks (leave blank to list all tasks).",
+                            "choices": [
+                                "done",
+                                "todo",
+                                "in-progress"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
