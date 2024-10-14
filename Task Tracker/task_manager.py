@@ -1,5 +1,8 @@
+from args_parser import parse_arguments
+
+
 def main():
-    print("Hello, world!")
+    parse_arguments()
 
 
 if __name__ == "__main__":
