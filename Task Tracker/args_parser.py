@@ -75,6 +75,6 @@ def parse_arguments(config_path: str) -> Namespace:
 
     with open(config_path, 'r') as config_file:
         config = json.loads(config_file.read())
-    
+
     parser = Parser.parse_config(config).construct_parser()
     return parser.parse_args()
