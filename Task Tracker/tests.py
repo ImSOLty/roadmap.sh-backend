@@ -3,6 +3,17 @@ import subprocess
 import os
 import pytest
 
+fake_tasks = [
+    "Do my laundry",
+    "Cancel milk delivery",
+    "Clean fridge",
+    "Check passport",
+    "Do web check-in",
+    "Download a movie for the flight",
+    "Recharge mobile",
+    "Pack swimsuit",
+]
+
 
 class Actions(enum.Enum):
     UNEXISTING = 'whatever'
@@ -97,21 +108,22 @@ def clear_file_on_test_start():
 def test_missing_required_arguments(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token in mocker.stderr.lower() for token in ['usage', 'error', 'arguments are required'])
+    assert all(token.lower() in mocker.stderr.lower() for token in ['usage', 'error', 'arguments are required'])
 
 
 @pytest.mark.parametrize('arguments', [
     [Actions.ADD, 'test_task', 'inc_argument'],
-    [Actions.DELETE, 0, 'inc_argument'],
-    [Actions.UPDATE, 0, 'test_task2', 'inc_argument'],
-    [Actions.MARK_IN_PROGRESS, 0, 'inc_argument'],
-    [Actions.MARK_DONE, 0, 'inc_argument'],
+    [Actions.DELETE, 1, 'inc_argument'],
+    [Actions.UPDATE, 1, 'test_task2', 'inc_argument'],
+    [Actions.MARK_IN_PROGRESS, 1, 'inc_argument'],
+    [Actions.MARK_DONE, 1, 'inc_argument'],
     [Actions.LIST, TaskType.DONE, 'inc_argument'],
 ])
 def test_incorrect_command_length(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token in mocker.stderr.lower() for token in ['usage', 'error', 'unrecognized arguments', arguments[-1]])
+    assert all(token.lower() in mocker.stderr.lower()
+               for token in ['usage', 'error', 'unrecognized arguments', arguments[-1]])
 
 
 @pytest.mark.parametrize('arguments', [
@@ -122,7 +134,7 @@ def test_incorrect_command_length(arguments):
 def test_incorrect_command(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token in mocker.stderr.lower() for token in ['usage', 'error', 'invalid choice'])
+    assert all(token.lower() in mocker.stderr.lower() for token in ['usage', 'error', 'invalid choice'])
 
 
 @pytest.mark.parametrize('id', [-1, 'string', 2])
@@ -136,12 +148,29 @@ def test_incorrect_id_in_command(arguments, id):
     Mocker([Actions.ADD, 'test_task']).run()  # add task to test identifiers
     mocker = Mocker([arguments[0]] + [id] + arguments[1:])
     mocker.run()
-    assert all(token in mocker.stderr.lower() for token in ['error', 'id'])
+    assert all(token.lower() in mocker.stderr.lower() for token in ['error', 'id'])
+
+
+# used for test_action_feedback test
+TEST_ACTION_FEEDBACK_TASK_NAME = "test_action_feedback"
+
+
+@pytest.mark.parametrize('arguments,expected_tokens', [
+    ([Actions.ADD, "test_task"], ["test_task", "add"]),
+    ([Actions.DELETE, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, "delete"]),
+    ([Actions.UPDATE, 1, "new_task_name"], [TEST_ACTION_FEEDBACK_TASK_NAME, "update", "new_task_name"]),
+    ([Actions.MARK_DONE, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskType.DONE.value]),
+    ([Actions.MARK_IN_PROGRESS, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskType.IN_PROGRESS.value]),
+])
+def test_action_feedback(arguments, expected_tokens):
+    Mocker([Actions.ADD, TEST_ACTION_FEEDBACK_TASK_NAME]).run()  # add task to test feedback
+    mocker = Mocker(arguments)
+    mocker.run()
+    assert all(token.lower() in mocker.stdout.lower() for token in expected_tokens)
 
 
 @pytest.mark.parametrize('arguments_sequence', [
-    [
-    ]
+    []
 ])
 def test_end_to_end(arguments_sequence):
     # todo
