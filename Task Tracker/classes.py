@@ -1,5 +1,6 @@
 import enum
 import typing
+from datetime import datetime
 
 
 class Actions(enum.Enum):
@@ -30,24 +31,37 @@ class Task:
     """
     description: str
     state: State
+    created: datetime
+    updated: datetime
 
     def __init__(
-            self, description: str, state: State | str = State.TODO
+            self, description: str, state: State | str = State.TODO,
+            created=int(datetime.now().timestamp()), updated=None
     ) -> "Task":
         self.description = description
         self.state = state if isinstance(state, State) else State(state)
+        self.created = created
+        self.updated = updated if updated else self.created
 
     def update_description(self, new_description: str) -> None:
         """
-        Updates Task's description to a new one passed as an argument
+        Updates Task's description to a new one passed as an argument. Updates 'updated' param as well
         """
         self.description = new_description
+        self.update_datetime_params()
 
     def update_state(self, new_state: State) -> None:
         """
-        Updates Task's state (State) to a new one passed as an argument
+        Updates Task's state (State) to a new one passed as an argument. Updates 'updated' param as well
         """
         self.state = new_state
+        self.update_datetime_params()
+
+    def update_datetime_params(self):
+        """
+        Updates Task's datetime params
+        """
+        self.updated = int(datetime.now().timestamp())
 
     @classmethod
     def from_dict(cls, obj: dict[str: typing.Any]) -> "Task":
@@ -57,9 +71,11 @@ class Task:
         return cls(**obj)
 
     def __str__(self) -> str:
+        datetime_part = f"\t | Created: {datetime.fromtimestamp(self.created)}" +\
+            f"\t | Updated: {datetime.fromtimestamp(self.updated)}"
         if self.state == State.DONE:
-            return '\u0336'.join(self.description) + '\u0336'
-        return self.description
+            return '\u0336'.join(self.description) + '\u0336' + datetime_part
+        return self.description + datetime_part
 
     def to_json(self) -> dict[str: typing.Any]:
         """
@@ -67,5 +83,7 @@ class Task:
         """
         return {
             "description": self.description,
-            "state": self.state.value
+            "state": self.state.value,
+            "created": self.created,
+            "updated": self.updated,
         }
