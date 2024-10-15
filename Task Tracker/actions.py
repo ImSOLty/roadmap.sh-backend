@@ -9,20 +9,25 @@ def add_task(tasks: dict[int: Task], task_name: str) -> None:
     """
     new_id = 1 if not tasks else (max(tasks.keys()) + 1)
     tasks[new_id] = Task(task_name)
+    print(f'Task "{task_name}" successfully added!')
 
 
 def update_task(tasks: dict[int: Task], id: int, new_task_name: str) -> None:
     """
     'Update task' action function
     """
+    task_description = tasks[id].description
     tasks[id].update_description(new_task_name)
+    print(f'Successfully updated "{task_description}" task with the new description: "{new_task_name}"!')
 
 
 def delete_task(tasks: dict[int: Task], id: int) -> None:
     """
     'Delete task' action function
     """
+    task_description = tasks[id].description
     tasks.pop(id)
+    print(f'Task "{task_description}" successfully deleted!')
 
 
 def mark_as(tasks: dict[int: Task], id: int, state: State) -> None:
@@ -30,6 +35,7 @@ def mark_as(tasks: dict[int: Task], id: int, state: State) -> None:
     'Mark as "done/in progress"' action function
     """
     tasks[id].update_state(state)
+    print(f'Task "{tasks[id].description}" marked as "{state.value}"!')
 
 
 def list_tasks(tasks: dict[int: Task], type: State) -> None:
