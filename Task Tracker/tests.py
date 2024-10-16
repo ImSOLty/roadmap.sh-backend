@@ -33,26 +33,26 @@ if os.getenv('PATH_TO_SCRIPT') is None:
     }
 
 PATH_TO_SCRIPT = os.path.join(os.path.dirname(__name__), os.getenv("PATH_TO_SCRIPT"))
-COMMAND = f'{os.getenv("INTERPRETER")} {PATH_TO_SCRIPT}'
 TASKS_FILE_NAME = os.getenv('TASKS_FILE_NAME')
 PATH_TO_TASKS_FILE = os.path.join(os.path.dirname(__name__), TASKS_FILE_NAME)
 
 
 class Mocker:
-    execution_command: str
+    arguments: list[str]
     process: subprocess.CompletedProcess[bytes]
     executed: bool
 
     def __init__(self, args):
         self.executed = False
-        arguments_as_string = [
+        command = [os.getenv("INTERPRETER"), PATH_TO_SCRIPT]
+        self.arguments = command + [
             # convert to str if enum
             ar.value if isinstance(ar, enum.Enum) else str(ar) for ar in args
         ]
-        self.execution_command = COMMAND + ' ' + ' '.join(arguments_as_string)
+        print(self.arguments)
 
     def run(self):
-        self.process = subprocess.run(self.execution_command,
+        self.process = subprocess.run(self.arguments,
                                       capture_output=True)
         self.executed = True
 
@@ -246,7 +246,7 @@ def test_end_to_end(arguments_sequence, output_list: TaskStatus):
             tasks[id]["updated"] = datetime.now().timestamp()
 
         # run command
-        mocker = Mocker([Actions.LIST, output_list])
+        mocker = Mocker([Actions.LIST, output_list] if output_list.value else [Actions.LIST])
         # validate "list" output
         included, excluded = [], []
         for task in tasks.values():
