@@ -33,6 +33,10 @@ jobs:
   run_tests:
     name: Tests Job
     runs-on: ubuntu-20.04
+    env:
+      INTERPRETER: '/opt/hostedtoolcache/Python/3.12.7/x64/python'
+      PATH_TO_SCRIPT: 'task_manager.py'
+      TASKS_FILE_NAME: 'tasks.json'
     continue-on-error: true
     steps:
       - name: Get repository code
