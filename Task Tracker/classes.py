@@ -45,14 +45,16 @@ class Task:
 
     def update_description(self, new_description: str) -> None:
         """
-        Updates Task's description to a new one passed as an argument. Updates 'updated' param as well
+        Updates Task's description to a new one passed as
+        an argument. Updates 'updated' param as well
         """
         self.description = new_description
         self.update_datetime_params()
 
     def update_state(self, new_state: State) -> None:
         """
-        Updates Task's state (State) to a new one passed as an argument. Updates 'updated' param as well
+        Updates Task's state (State) to a new one passed as
+        an argument. Updates 'updated' param as well
         """
         self.state = new_state
         self.update_datetime_params()
@@ -71,7 +73,8 @@ class Task:
         return cls(**obj)
 
     def __str__(self) -> str:
-        datetime_part = f"\t | Created: {datetime.fromtimestamp(self.created)}" +\
+        datetime_part = \
+            f"\t | Created: {datetime.fromtimestamp(self.created)}" + \
             f"\t | Updated: {datetime.fromtimestamp(self.updated)}"
         return self.description + datetime_part
 

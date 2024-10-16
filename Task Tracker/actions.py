@@ -18,7 +18,8 @@ def update_task(tasks: dict[int: Task], id: int, new_task_name: str) -> None:
     """
     task_description = tasks[id].description
     tasks[id].update_description(new_task_name)
-    print(f'Successfully updated "{task_description}" task with the new description: "{new_task_name}"!')
+    print(f'Successfully updated "{task_description}"' +
+          ' task with the new description: "{new_task_name}"!')
 
 
 def delete_task(tasks: dict[int: Task], id: int) -> None:

@@ -1,10 +1,9 @@
 import enum
 import subprocess
 import os
-import pytest
 from datetime import datetime
 
-import time
+import pytest
 
 
 class Actions(enum.Enum):
@@ -47,7 +46,7 @@ class Mocker:
         self.executed = False
         arguments_as_string = [
             # convert to str if enum
-            arg.value if isinstance(arg, enum.Enum) else str(arg) for arg in args
+            ar.value if isinstance(ar, enum.Enum) else str(ar) for ar in args
         ]
         self.execution_command = COMMAND + ' ' + ' '.join(arguments_as_string)
 
@@ -101,7 +100,9 @@ def clear_file_on_test_start():
 def test_missing_required_arguments(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token.lower() in mocker.stderr.lower() for token in ['usage', 'error', 'arguments are required'])
+    assert all(token.lower() in mocker.stderr.lower() for token in [
+        'usage', 'error', 'arguments are required'
+    ])
 
 
 @pytest.mark.parametrize('arguments', [
@@ -115,8 +116,9 @@ def test_missing_required_arguments(arguments):
 def test_incorrect_command_length(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token.lower() in mocker.stderr.lower()
-               for token in ['usage', 'error', 'unrecognized arguments', arguments[-1]])
+    assert all(token.lower() in mocker.stderr.lower() for token in [
+        'usage', 'error', 'unrecognized arguments', arguments[-1]
+    ])
 
 
 @pytest.mark.parametrize('arguments', [
@@ -127,7 +129,9 @@ def test_incorrect_command_length(arguments):
 def test_incorrect_command(arguments):
     mocker = Mocker(arguments)
     mocker.run()
-    assert all(token.lower() in mocker.stderr.lower() for token in ['usage', 'error', 'invalid choice'])
+    assert all(token.lower() in mocker.stderr.lower() for token in [
+        'usage', 'error', 'invalid choice'
+    ])
 
 
 @pytest.mark.parametrize('id', [-1, 'string', 2])
@@ -141,7 +145,9 @@ def test_incorrect_id_in_command(arguments, id):
     Mocker([Actions.ADD, 'test_task']).run()  # add task to test identifiers
     mocker = Mocker([arguments[0]] + [id] + arguments[1:])
     mocker.run()
-    assert all(token.lower() in mocker.stderr.lower() for token in ['error', 'id'])
+    assert all(token.lower() in mocker.stderr.lower() for token in [
+        'error', 'id'
+    ])
 
 
 # used for test_action_feedback test
