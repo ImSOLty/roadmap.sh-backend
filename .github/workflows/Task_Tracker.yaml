@@ -1,0 +1,54 @@
+name: Task Tracker Tests
+
+on:
+  push:
+    paths:
+      - 'Task Tracker/**'
+  workflow_dispatch:
+
+jobs:
+  run_linter:
+    name: Linter Job
+    runs-on: ubuntu-20.04
+    continue-on-error: true
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pep8-naming
+
+      - name: Lint (flake8)
+        working-directory: './Task Tracker'
+        run: |
+          flake8 . --count --max-line-length=79 --max-complexity=12 --exclude="tests.py"
+
+  run_tests:
+    name: Tests Job
+    runs-on: ubuntu-20.04
+    continue-on-error: true
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run tests
+        working-directory: './Task Tracker'
+        run: |
+          pytest tests.py
