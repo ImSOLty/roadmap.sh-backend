@@ -44,11 +44,11 @@ def list_tasks(tasks: dict[int: Task], type: State) -> None:
     """
     def print_tasks(type_to_print: State, tasks_to_print: dict[int: Task]):
         if type_to_print == State.IN_PROGRESS:
-            print("In progress:")
+            print("[In progress]:")
         elif type_to_print == State.TODO:
-            print("To do:")
+            print("[To do]:")
         elif type_to_print == State.DONE:
-            print("Completed:")
+            print("[Completed]:")
 
         for id, task in tasks_to_print.items():
             print(f'{id}. {task}')

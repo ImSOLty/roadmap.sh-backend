@@ -73,8 +73,6 @@ class Task:
     def __str__(self) -> str:
         datetime_part = f"\t | Created: {datetime.fromtimestamp(self.created)}" +\
             f"\t | Updated: {datetime.fromtimestamp(self.updated)}"
-        if self.state == State.DONE:
-            return '\u0336'.join(self.description) + '\u0336' + datetime_part
         return self.description + datetime_part
 
     def to_json(self) -> dict[str: typing.Any]:

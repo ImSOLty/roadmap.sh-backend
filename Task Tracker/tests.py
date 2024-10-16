@@ -2,17 +2,9 @@ import enum
 import subprocess
 import os
 import pytest
+from datetime import datetime
 
-fake_tasks = [
-    "Do my laundry",
-    "Cancel milk delivery",
-    "Clean fridge",
-    "Check passport",
-    "Do web check-in",
-    "Download a movie for the flight",
-    "Recharge mobile",
-    "Pack swimsuit",
-]
+import time
 
 
 class Actions(enum.Enum):
@@ -25,7 +17,8 @@ class Actions(enum.Enum):
     LIST = 'list'
 
 
-class TaskType(enum.Enum):
+class TaskStatus(enum.Enum):
+    EMPTY = ''
     UNEXISTING = 'whatever'
     TODO = 'todo'
     IN_PROGRESS = 'in-progress'
@@ -67,13 +60,13 @@ class Mocker:
     def stdout(self):
         if not self.executed:
             return None
-        return str(self.process.stdout.strip())
+        return self.process.stdout.strip().decode("utf-8")
 
     @property
     def stderr(self):
         if not self.executed:
             return None
-        return str(self.process.stderr.strip())
+        return self.process.stderr.strip().decode("utf-8")
 
 
 def clear_tasks_file():
@@ -117,7 +110,7 @@ def test_missing_required_arguments(arguments):
     [Actions.UPDATE, 1, 'test_task2', 'inc_argument'],
     [Actions.MARK_IN_PROGRESS, 1, 'inc_argument'],
     [Actions.MARK_DONE, 1, 'inc_argument'],
-    [Actions.LIST, TaskType.DONE, 'inc_argument'],
+    [Actions.LIST, TaskStatus.DONE, 'inc_argument'],
 ])
 def test_incorrect_command_length(arguments):
     mocker = Mocker(arguments)
@@ -129,7 +122,7 @@ def test_incorrect_command_length(arguments):
 @pytest.mark.parametrize('arguments', [
     [Actions.UNEXISTING],
     [Actions.UNEXISTING, 'random_argument'],
-    [Actions.LIST, TaskType.UNEXISTING],
+    [Actions.LIST, TaskStatus.UNEXISTING],
 ])
 def test_incorrect_command(arguments):
     mocker = Mocker(arguments)
@@ -159,19 +152,103 @@ TEST_ACTION_FEEDBACK_TASK_NAME = "test_action_feedback"
     ([Actions.ADD, "test_task"], ["test_task", "add"]),
     ([Actions.DELETE, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, "delete"]),
     ([Actions.UPDATE, 1, "new_task_name"], [TEST_ACTION_FEEDBACK_TASK_NAME, "update", "new_task_name"]),
-    ([Actions.MARK_DONE, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskType.DONE.value]),
-    ([Actions.MARK_IN_PROGRESS, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskType.IN_PROGRESS.value]),
+    ([Actions.MARK_DONE, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskStatus.DONE.value]),
+    ([Actions.MARK_IN_PROGRESS, 1], [TEST_ACTION_FEEDBACK_TASK_NAME, TaskStatus.IN_PROGRESS.value]),
 ])
 def test_action_feedback(arguments, expected_tokens):
     Mocker([Actions.ADD, TEST_ACTION_FEEDBACK_TASK_NAME]).run()  # add task to test feedback
     mocker = Mocker(arguments)
     mocker.run()
     assert all(token.lower() in mocker.stdout.lower() for token in expected_tokens)
+    assert not mocker.stderr.strip()
 
 
+fake_tasks = [
+    '"Do my laundry"',
+    '"Cancel milk delivery"',
+    '"Clean fridge"',
+    '"Check passport"',
+    '"Do web check-in"',
+    '"Download a movie for the flight"',
+    '"Recharge mobile"',
+    '"Pack swimsuit"',
+]
+
+
+def clear_string(s):
+    return ''.join(e for e in s if e.isalnum()).lower()
+
+
+def validate_list_output(output, included_tasks, excluded_tasks):
+    output = clear_string(output)
+
+    for task in included_tasks:
+        description, created_ts, updated_ts =\
+              task['description'], int(task['created']), int(task['updated'])
+        assert clear_string(description) in output
+        assert clear_string(str(datetime.fromtimestamp(created_ts))) in output
+        assert clear_string(str(datetime.fromtimestamp(updated_ts))) in output
+    for task in excluded_tasks:
+        assert not (clear_string(task['description']).lower() in output)
+
+
+@pytest.mark.parametrize('output_list', [TaskStatus.EMPTY, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE])
 @pytest.mark.parametrize('arguments_sequence', [
-    []
+    [
+        [Actions.ADD, fake_tasks[0]],
+        [Actions.ADD, fake_tasks[1]],
+        [Actions.UPDATE, 2, fake_tasks[2]],
+        [Actions.ADD, fake_tasks[3]],
+        [Actions.UPDATE, 3, fake_tasks[4]],
+        [Actions.UPDATE, 1, fake_tasks[5]],
+        [Actions.MARK_IN_PROGRESS, 2],
+        [Actions.MARK_DONE, 3],
+        [Actions.DELETE, 1],
+        [Actions.DELETE, 2],
+        [Actions.DELETE, 3],
+    ]
 ])
-def test_end_to_end(arguments_sequence):
-    # todo
-    assert True
+def test_end_to_end(arguments_sequence, output_list: TaskStatus):
+    tasks = {}
+
+    for arguments in arguments_sequence:
+        mocker = Mocker(arguments)
+        mocker.run()
+        assert not mocker.stderr.strip()
+
+        # parse command and action
+        action = arguments[0]
+        id = arguments[1]
+        if action == Actions.ADD:
+            tasks[1 if not tasks else max(tasks.keys()) + 1] = {
+                "description": arguments[1],
+                "created": datetime.now().timestamp(),
+                "updated": datetime.now().timestamp(),
+                "status": TaskStatus.TODO,
+            }
+        elif action == Actions.UPDATE:
+            tasks[id]["description"] = arguments[2]
+            tasks[id]["updated"] = datetime.now().timestamp()
+        elif action == Actions.DELETE:
+            tasks.pop(id)
+        elif action == Actions.MARK_DONE:
+            tasks[id]["status"] = TaskStatus.DONE
+            tasks[id]["updated"] = datetime.now().timestamp()
+        elif action == Actions.MARK_IN_PROGRESS:
+            tasks[id]["status"] = TaskStatus.IN_PROGRESS
+            tasks[id]["updated"] = datetime.now().timestamp()
+
+        # run command
+        mocker = Mocker([Actions.LIST, output_list])
+        # validate "list" output
+        included, excluded = [], []
+        for task in tasks.values():
+            if output_list in [task['status'], TaskStatus.EMPTY]:
+                included.append(task)
+            else:
+                excluded.append(task)
+
+        mocker.run()
+
+        validate_list_output(mocker.stdout, included_tasks=included, excluded_tasks=excluded)
+        assert not mocker.stderr.strip()
