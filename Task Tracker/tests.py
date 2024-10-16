@@ -32,7 +32,8 @@ if os.getenv('PATH_TO_SCRIPT') is None:
         'TASKS_FILE_NAME': 'tasks.json',
     }
 
-COMMAND = f'{os.getenv("INTERPRETER")} {os.getenv("PATH_TO_SCRIPT")}'
+PATH_TO_SCRIPT = os.path.join(os.path.dirname(__name__), os.getenv("PATH_TO_SCRIPT"))
+COMMAND = f'{os.getenv("INTERPRETER")} {PATH_TO_SCRIPT}'
 TASKS_FILE_NAME = os.getenv('TASKS_FILE_NAME')
 PATH_TO_TASKS_FILE = os.path.join(os.path.dirname(__name__), TASKS_FILE_NAME)
 
